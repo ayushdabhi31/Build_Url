@@ -11,7 +11,7 @@ runs:
   args:
     - ${{ inputs.github-token }}
 
-  branding:
+branding:
   icon: 'award'
   color: 'green'
 
