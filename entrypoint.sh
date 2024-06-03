@@ -8,6 +8,7 @@ pull_request_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
 echo PR Number - $pull_request_number
 
 build_url=$(jq -r '.homepage' package.json)
+echo Build url - $build_url
 
 # Create a comment with the GIF on the pull request
 comment_response=$(curl -sX POST -H "Authorization: token $GITHUB_TOKEN" \
