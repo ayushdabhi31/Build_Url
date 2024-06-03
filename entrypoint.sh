@@ -7,6 +7,9 @@ GITHUB_TOKEN=$1
 pull_request_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
 echo PR Number - $pull_request_number
 
+# install dependencies
+npm install
+
 # Run npm build
 npm run build
 
