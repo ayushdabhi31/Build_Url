@@ -32,14 +32,13 @@ echo "PR Number - $pull_request_number"
 git clone "https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
 cd "$(basename "$GITHUB_REPOSITORY" .git)"
 
-# update
+# Update npm dependencies and build project
 npm update
 if [ $? -ne 0 ]; then
-  echo "Error: npm install failed."
+  echo "Error: npm update failed."
   exit 1
 fi
 
-# Install npm dependencies and build project
 npm install
 if [ $? -ne 0 ]; then
   echo "Error: npm install failed."
