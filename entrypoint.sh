@@ -9,6 +9,12 @@ if [ -z "$GITHUB_TOKEN" ]; then
   exit 1
 fi
 
+# Validate GitHub Event Path
+if [ -z "$GITHUB_EVENT_PATH" ]; then
+  echo "Error: GitHub event path not provided."
+  exit 1
+fi
+
 # Get the pull request number from the GitHub event payload
 if [ ! -f "$GITHUB_EVENT_PATH" ]; then
   echo "Error: GitHub event path not found."
@@ -22,15 +28,12 @@ if [ -z "$pull_request_number" ]; then
 fi
 echo "PR Number - $pull_request_number"
 
-
-# Install nodejs through nvm
-echo -e "\n\Installing nodejs through nvm\n"
-# Use curl or wget command
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.7/install.sh | bash
-export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-nvm install node20  # Will install latest node and npm 
-
+# Install Node.js and npm
+apt update && apt install -y nodejs npm
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to install Node.js and npm."
+  exit 1
+fi
 
 # Fetch repository contents from GitHub
 repo_contents_response=$(curl -sX GET -H "Authorization: token $GITHUB_TOKEN" \
