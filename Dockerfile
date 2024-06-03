@@ -3,7 +3,7 @@ FROM alpine:3.10
 
 # Install necessary packages and Node.js version 20
 RUN apk update && \
-    apk add --no-cache curl jq zip && \
+    apk add --no-cache curl jq zip bash && \
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
     apk add --no-cache nodejs npm
 
