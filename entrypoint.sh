@@ -29,7 +29,13 @@ fi
 echo "PR Number - $pull_request_number"
 
 # Install Node.js and npm
-apt update && apt install -y nodejs npm
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+if [ $? -ne 0 ]; then
+  echo "Error: Failed to download Node.js setup script."
+  exit 1
+fi
+
+apt-get install -y nodejs
 if [ $? -ne 0 ]; then
   echo "Error: Failed to install Node.js and npm."
   exit 1
