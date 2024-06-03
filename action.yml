@@ -10,7 +10,3 @@ runs:
   image: 'Dockerfile'
   args:
     - ${{ inputs.github-token }}
-    
-branding:
-  icon: 'award'
-  color: 'green'
