@@ -65,30 +65,17 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Create a new release
-release_response=$(curl -sX POST -H "Authorization: token $GITHUB_TOKEN" \
-  -H "Accept: application/vnd.github.v3+json" \
-  -d "{\"tag_name\": \"pr-$pull_request_number-build\", \"name\": \"PR #$pull_request_number Build\", \"body\": \"Build for PR #$pull_request_number\"}" \
-  "https://api.github.com/repos/$GITHUB_REPOSITORY/releases")
+# Get the latest release ID
+release_id=$(curl -sH "Authorization: token $GITHUB_TOKEN" \
+  "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/latest" | jq -r '.id')
 
-# Extract the upload URL for the release
-upload_url=$(echo "$release_response" | jq -r '.upload_url' | sed -e "s/{?name,label}//")
-
-if [ -z "$upload_url" ]; then
-  echo "Error: Unable to create a new release."
-  exit 1
-fi
-
-# Upload the zip file to the release
-upload_response=$(curl -sX POST -H "Authorization: token $GITHUB_TOKEN" \
+# Upload the zip file to GitHub Releases
+upload_url=$(curl -sH "Authorization: token $GITHUB_TOKEN" \
   -H "Content-Type: application/zip" \
   --data-binary @build.zip \
-  "$upload_url?name=build.zip")
+  "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$release_id/assets?name=build.zip" | jq -r '.browser_download_url')
 
-# Extract the browser download URL from the upload response
-browser_download_url=$(echo "$upload_response" | jq -r '.browser_download_url')
-
-if [ -z "$browser_download_url" ]; then
+if [ -z "$upload_url" ]; then
   echo "Error: Failed to upload the zip file."
   exit 1
 fi
@@ -96,7 +83,7 @@ fi
 # Post a comment on the pull request with the link to the zip file
 comment_response=$(curl -sX POST -H "Authorization: token $GITHUB_TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
-  -d "{\"body\": \"### PR - #$pull_request_number. \n ### 🎉 Here is your build zip file! \n [Download Build Zip]($browser_download_url) \"}" \
+  -d "{\"body\": \"### PR - #$pull_request_number. \n ### 🎉 Here is your build zip file! \n [Download Build Zip]($upload_url) \"}" \
   "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$pull_request_number/comments")
 
 # Extract and print the comment URL from the comment response
