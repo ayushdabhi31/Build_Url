@@ -7,14 +7,11 @@ GITHUB_TOKEN=$1
 pull_request_number=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
 echo PR Number - $pull_request_number
 
-# install dependencies
-npm install
-
-# Run npm build
+npm install 
 npm run build
 
 # Zip the build folder
-zip -r build.zip build
+RUN zip -r build.zip build
 
 # Upload the zip file to GitHub Releases
 upload_url=$(curl -sH "Authorization: token $GITHUB_TOKEN" \
