@@ -1,3 +1,5 @@
+#!/bin/sh
+
 # Get the GitHub Token from GitHub Action inputs
 GITHUB_TOKEN=$1
 
