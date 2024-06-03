@@ -28,38 +28,9 @@ if [ -z "$pull_request_number" ]; then
 fi
 echo "PR Number - $pull_request_number"
 
-# Install Node.js and npm
-curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-if [ $? -ne 0 ]; then
-  echo "Error: Failed to download Node.js setup script."
-  exit 1
-fi
-
-apt-get install -y nodejs
-if [ $? -ne 0 ]; then
-  echo "Error: Failed to install Node.js and npm."
-  exit 1
-fi
-
-# Fetch repository contents from GitHub
-repo_contents_response=$(curl -sX GET -H "Authorization: token $GITHUB_TOKEN" \
-  -H "Accept: application/vnd.github.v3+json" \
-  "https://api.github.com/repos/$GITHUB_REPOSITORY/contents")
-
-# Check if the repository contents were fetched successfully
-if echo "$repo_contents_response" | jq -e '.message'; then
-  echo "Error: $(echo "$repo_contents_response" | jq -r '.message')"
-  exit 1
-fi
-
-# Find package.json in the repository contents
-package_json=$(echo "$repo_contents_response" | jq -r '.[] | select(.name == "package.json")')
-
-# Check if package.json was found
-if [ -z "$package_json" ]; then
-  echo "Error: package.json file not found in the repository"
-  exit 1
-fi
+# Clone the repository
+git clone "https://x-access-token:$GITHUB_TOKEN@github.com/$GITHUB_REPOSITORY.git"
+cd "$(basename "$GITHUB_REPOSITORY" .git)"
 
 # Install npm dependencies and build project
 npm install
@@ -87,22 +58,30 @@ if [ $? -ne 0 ]; then
   exit 1
 fi
 
-# Get the latest release ID
-release_id=$(curl -sH "Authorization: token $GITHUB_TOKEN" \
-  "https://api.github.com/repos/$GITHUB_REPOSITORY/releases/latest" | jq -r .id)
+# Create a new release
+release_response=$(curl -sX POST -H "Authorization: token $GITHUB_TOKEN" \
+  -H "Accept: application/vnd.github.v3+json" \
+  -d "{\"tag_name\": \"pr-$pull_request_number-build\", \"name\": \"PR #$pull_request_number Build\", \"body\": \"Build for PR #$pull_request_number\"}" \
+  "https://api.github.com/repos/$GITHUB_REPOSITORY/releases")
 
-if [ -z "$release_id" ]; then
-  echo "Error: Unable to fetch the latest release ID."
+# Extract the upload URL for the release
+upload_url=$(echo "$release_response" | jq -r '.upload_url' | sed -e "s/{?name,label}//")
+
+if [ -z "$upload_url" ]; then
+  echo "Error: Unable to create a new release."
   exit 1
 fi
 
-# Upload the zip file to GitHub Releases
-upload_url=$(curl -sH "Authorization: token $GITHUB_TOKEN" \
+# Upload the zip file to the release
+upload_response=$(curl -sX POST -H "Authorization: token $GITHUB_TOKEN" \
   -H "Content-Type: application/zip" \
   --data-binary @build.zip \
-  "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$release_id/assets?name=build.zip" | jq -r '.browser_download_url')
+  "$upload_url?name=build.zip")
 
-if [ -z "$upload_url" ]; then
+# Extract the browser download URL from the upload response
+browser_download_url=$(echo "$upload_response" | jq -r '.browser_download_url')
+
+if [ -z "$browser_download_url" ]; then
   echo "Error: Failed to upload the zip file."
   exit 1
 fi
@@ -110,7 +89,7 @@ fi
 # Post a comment on the pull request with the link to the zip file
 comment_response=$(curl -sX POST -H "Authorization: token $GITHUB_TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
-  -d "{\"body\": \"### PR - #$pull_request_number. \n ### 🎉 Here is your build zip file! \n [Download Build Zip]($upload_url) \"}" \
+  -d "{\"body\": \"### PR - #$pull_request_number. \n ### 🎉 Here is your build zip file! \n [Download Build Zip]($browser_download_url) \"}" \
   "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$pull_request_number/comments")
 
 # Extract and print the comment URL from the comment response
