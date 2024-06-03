@@ -5,6 +5,7 @@ FROM alpine:3.10
 RUN apk update && \
     apk add --no-cache curl jq
 
+RUN chmod +x entrypoint.sh
 # Copy your entrypoint script to the container file path
 COPY entrypoint.sh /entrypoint.sh
 
@@ -12,4 +13,4 @@ COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
 # Code file to execute when the docker container starts up (`entrypoint.sh`)
-ENTRYPOINT ["/bin/sh", "/entrypoint.sh"]
+ENTRYPOINT ["/entrypoint.sh"]
