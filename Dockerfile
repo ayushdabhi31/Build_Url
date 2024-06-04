@@ -3,8 +3,7 @@ FROM ubuntu
 
 # Install necessary packages and Node.js version 20
 RUN apt update && \
-    apt install -y curl jq zip bash && \
-    apt install -y nodejs npm
+    apt install -y curl jq zip bash 
 
 # Copy your entrypoint script to the container file path
 COPY entrypoint.sh /entrypoint.sh
