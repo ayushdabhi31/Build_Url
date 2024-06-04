@@ -1,15 +1,12 @@
-# Container image that runs your code
-FROM ubuntu
+FROM node:20
 
-# Install necessary packages and Node.js version 20
 RUN apt update && \
-    apt install -y curl jq zip bash 
+    apt install -y curl jq zip bash
 
-# Copy your entrypoint script to the container file path
 COPY entrypoint.sh /entrypoint.sh
 
-# Make the script executable
 RUN chmod +x /entrypoint.sh
 
-# Code file to execute when the docker container starts up (`entrypoint.sh`)
+WORKDIR /github/workspace
+
 ENTRYPOINT ["/entrypoint.sh"]
