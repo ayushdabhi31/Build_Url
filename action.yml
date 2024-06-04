@@ -8,12 +8,8 @@ inputs:
   github-token:
     description: 'GitHub Token'
     required: true
-  github-event-path:
-    description: 'Path to the GitHub event file'
-    required: true
 runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
     - ${{ inputs.github-token }}
-    - ${{ inputs.github-event-path }}
