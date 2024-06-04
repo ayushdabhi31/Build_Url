@@ -2,6 +2,14 @@
 
 set -e
 
+# Get the GitHub token and event path from the script arguments
+GITHUB_TOKEN=$1
+GITHUB_EVENT_PATH=$2
+
+# Debugging: Print the event path and token (remove or mask sensitive data in logs)
+echo "GITHUB_EVENT_PATH: $GITHUB_EVENT_PATH"
+echo "GITHUB_TOKEN: $GITHUB_TOKEN"
+
 # Navigate to the repository
 cd "$GITHUB_WORKSPACE"
 
