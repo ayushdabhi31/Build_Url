@@ -1,6 +1,3 @@
-### entrypoint.sh
-
-bash
 #!/bin/bash
 
 set -e
