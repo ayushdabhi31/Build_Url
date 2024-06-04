@@ -2,13 +2,19 @@
 
 set -e
 
-# Get the GitHub token and event path from the script arguments
-GITHUB_TOKEN=$1
-GITHUB_EVENT_PATH=$2
-
 # Debugging: Print the event path and token (remove or mask sensitive data in logs)
 echo "GITHUB_EVENT_PATH: $GITHUB_EVENT_PATH"
-echo "GITHUB_TOKEN: $GITHUB_TOKEN"
+echo "GITHUB_TOKEN: ${GITHUB_TOKEN:0:4}****"
+
+# Verify the existence of the event.json file
+if [ ! -f "$GITHUB_EVENT_PATH" ]; then
+  echo "Error: GitHub event file not found at $GITHUB_EVENT_PATH"
+  exit 1
+fi
+
+# Print the content of the event file for debugging
+echo "Event file content:"
+cat "$GITHUB_EVENT_PATH"
 
 # Navigate to the repository
 cd "$GITHUB_WORKSPACE"
@@ -20,14 +26,10 @@ npm run build
 # Zip the build directory
 zip -r build.zip build
 
-# Get the pull request number
-PR_NUMBER=$(jq --raw-output .pull_request.number "$GITHUB_EVENT_PATH")
-TAG="pr-${PR_NUMBER}-build"
-
 # Create a release
 release_response=$(curl -sX POST -H "Authorization: token $GITHUB_TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
-  -d "{\"tag_name\": \"$TAG\", \"name\": \"$TAG\", \"body\": \"Release for PR #$PR_NUMBER\"}" \
+  -d "{\"tag_name\": \"pr-build\", \"name\": \"pr-build\", \"body\": \"Release for pull request\"}" \
   "https://api.github.com/repos/$GITHUB_REPOSITORY/releases")
 
 # Verify release response
@@ -60,8 +62,8 @@ fi
 # Post a comment on the pull request with the link to the zip file
 comment_response=$(curl -sX POST -H "Authorization: token $GITHUB_TOKEN" \
   -H "Accept: application/vnd.github.v3+json" \
-  -d "{\"body\": \"### PR - #$PR_NUMBER. \n ### 🎉 Here is your build zip file! \n [Download Build Zip]($download_url) \"}" \
-  "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/$PR_NUMBER/comments")
+  -d "{\"body\": \"### 🎉 Here is your build zip file! \n [Download Build Zip]($download_url) \"}" \
+  "https://api.github.com/repos/$GITHUB_REPOSITORY/issues/comments")
 
 # Extract and print the comment URL from the comment response
 comment_url=$(echo "$comment_response" | jq --raw-output .html_url)
