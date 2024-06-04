@@ -1,4 +1,4 @@
-name: 'Build url PR Comment for React App'
+name: 'Build URL PR Comment for React App'
 description: 'Add a Build URL comment to new pull requests for React App.'
 author: 'Ayush Dabhi'
 branding:
@@ -8,10 +8,12 @@ inputs:
   github-token:
     description: 'GitHub Token'
     required: true
+  GITHUB_EVENT_PATH:
+    description: 'Path to the GitHub event file'
+    required: true
 runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
     - ${{ inputs.github-token }}
-
-
+    - ${{ github.event_path }}
