@@ -1,17 +1,17 @@
 name: 'Build url PR Comment for React App'
 description: 'Add a Build URL comment to new pull requests for React App.'
+author: 'Ayush Dabhi'
+branding:
+  icon: 'git-pull-request'
+  color: 'blue'
 inputs:
   github-token:
     description: 'GitHub Token'
     required: true
-
 runs:
   using: 'docker'
   image: 'Dockerfile'
   args:
     - ${{ inputs.github-token }}
 
-branding:
-  icon: 'award'
-  color: 'green'
 
